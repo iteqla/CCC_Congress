@@ -1,0 +1,41 @@
+import requests
+import csv
+from datetime import date
+
+# --- CONFIG ---
+rating_date = date.today().isoformat()  # or set manually e.g. "2025-11-28"
+ecf_codes = ["107586", "311707J", "365840F"]  # Add as many as you want
+output_file = f"ecf_ratings_{rating_date}.csv"
+# --------------
+
+base_url = "https://rating.englishchess.org.uk/v2/new/api.php?v2"
+
+with open(output_file, "w", newline="", encoding="utf-8") as csvfile:
+    writer = csv.writer(csvfile)
+    writer.writerow(["ECF Code", "FIDE ID", "First Name", "Last Name", "ECF Rating", "Club"])
+
+    for code in ecf_codes:
+        # 1. Player info (name + club)
+        info = requests.get(f"{base_url}/players/code/{code}").json()
+        full_name = info.get("full_name", "")
+        # Name comes as "Last, First" or "Last First" – handle both
+        if "," in full_name:
+            last, first = map(str.strip, full_name.split(",", 1))
+        else:
+            parts = full_name.split()
+            first = parts[0] if parts else ""
+            last = " ".join(parts[1:]) if len(parts) > 1 else ""
+        club = info.get("club_name", "")
+        fide_id = info.get("FIDE_no", "")
+
+        # 2. Standard rating on chosen date
+        rating_resp = requests.get(
+            f"{base_url}/ratings/S/{code}/{rating_date}",
+        ).json()
+        rating = rating_resp.get("revised_rating", "")
+
+        writer.writerow([
+            code, fide_id, first, last, rating, "", "", club, "", "", "", ""
+        ])
+
+print(f"Done → {output_file}")
