@@ -8,15 +8,16 @@ ecf_codes = ["107586", "311707J", "365840F"]  # Add as many as you want
 output_file = f"ecf_ratings_{rating_date}.csv"
 # --------------
 
-base_url = "https://rating.englishchess.org.uk/v2/new/api.php?v2"
+base_url_ecf =  "https://rating.englishchess.org.uk/v2/new/api.php?v2"
+base_url_fide = "https://api.chesstools.org/fide/"
 
 with open(output_file, "w", newline="", encoding="utf-8") as csvfile:
     writer = csv.writer(csvfile)
-    writer.writerow(["ECF Code", "FIDE ID", "First Name", "Last Name", "ECF Rating", "Club"])
+    writer.writerow(["ECF Code", "FIDE ID", "First Name", "Last Name", "ECF Rating","FIDE Rating", "Club"])
 
     for code in ecf_codes:
-        # 1. Player info (name + club)
-        info = requests.get(f"{base_url}/players/code/{code}").json()
+        # Player info (name + club)
+        info = requests.get(f"{base_url_ecf}/players/code/{code}").json()
         full_name = info.get("full_name", "")
         # Name comes as "Last, First" or "Last First" – handle both
         if "," in full_name:
@@ -28,14 +29,20 @@ with open(output_file, "w", newline="", encoding="utf-8") as csvfile:
         club = info.get("club_name", "")
         fide_id = info.get("FIDE_no", "")
 
-        # 2. Standard rating on chosen date
-        rating_resp = requests.get(
-            f"{base_url}/ratings/S/{code}/{rating_date}",
+        # Standard ECF rating on chosen date
+        rating_ecf_resp = requests.get(
+            f"{base_url_ecf}/ratings/S/{code}/{rating_date}",
         ).json()
-        rating = rating_resp.get("revised_rating", "")
+        rating_ecf = rating_ecf_resp.get("revised_rating", "")
+
+        # Standard FIDE rating
+        rating_fide_resp = requests.get(
+            f"{base_url_fide}/{fide_id}",
+        ).json()
+        rating_fide = rating_fide_resp.get("rating", "")
 
         writer.writerow([
-            code, fide_id, first, last, rating, "", "", club, "", "", "", ""
+            code, fide_id, first, last, rating_ecf, rating_fide, "", club, "", "", "", ""
         ])
 
 print(f"Done → {output_file}")
