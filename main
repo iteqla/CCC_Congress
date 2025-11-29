@@ -4,16 +4,20 @@ from datetime import date
 
 # --- CONFIG ---
 rating_date = date.today().isoformat()
-ecf_codes = ["107586", "311707J", "365840F"]
+ecf_codes = ["107586L", "311707J", "365840F"] # Put as many as you want
 output_file = f"congress_entries_{rating_date}.csv"
-# --- API URL ---
+
+# --- API URLs ---
 base_url_ecf = "https://rating.englishchess.org.uk/v2/new/api.php?v2"
 base_url_fide = "https://api.chesstools.org/fide/"
 
 with open(output_file, "w", newline="", encoding="utf-8") as csvfile:
     writer = csv.writer(csvfile)
-    writer.writerow(["ECF Code", "FIDE ID", "First Name", "Last Name",
-                     "ECF Rating", "FIDE Rating", "Section", "Club"])
+    writer.writerow([
+        "ECF Code", "FIDE ID", "First Name", "Last Name",
+        "ECF Rating", "FIDE Rating", "Club", "Section",
+        "Bye", "Paid", "Email", "Phone"
+    ])
 
     for code in ecf_codes:
         # --- ECF data ---
@@ -25,6 +29,7 @@ with open(output_file, "w", newline="", encoding="utf-8") as csvfile:
             parts = full_name.split()
             first = parts[0] if parts else ""
             last = " ".join(parts[1:]) if len(parts) > 1 else ""
+
         club = info.get("club_name", "")
         fide_id = info.get("FIDE_no", "")
 
@@ -45,8 +50,28 @@ with open(output_file, "w", newline="", encoding="utf-8") as csvfile:
             except Exception:
                 rating_fide = "Error"
 
+        # --- HTML wrapping ---
+        ecf_link = f'<a href="https://rating.englishchess.org.uk/players?player_no={code}" target="_blank">{code}</a>'
+
+        if fide_id and str(fide_id).strip().isdigit():
+            fide_link = f'<a href="https://ratings.fide.com/profile/{fide_id}" target="_blank">{fide_id}</a>'
+        else:
+            fide_link = fide_id if fide_id else ""
+
+        # --- Write row ---
         writer.writerow([
-            code, fide_id, first, last, rating_ecf, rating_fide, "", club, "", "", "", ""
+            ecf_link,
+            fide_link,
+            first,
+            last,
+            rating_ecf,
+            rating_fide,
+            club,
+            "",          # Section
+            "",          # Bye
+            "",          # Paid
+            "",          # Email
+            "",          # Phone
         ])
 
 print(f"Done → {output_file}")
