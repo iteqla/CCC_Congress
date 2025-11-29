@@ -5,16 +5,15 @@ from datetime import date
 # --- CONFIG ---
 rating_date = date.today().isoformat()
 ecf_codes = ["107586", "311707J", "365840F"]
-output_file = f"ecf_ratings_{rating_date}.csv"
-# --------------
-
+output_file = f"congress_entries_{rating_date}.csv"
+# --- API URL ---
 base_url_ecf = "https://rating.englishchess.org.uk/v2/new/api.php?v2"
-base_url_fide = "https://api.chesstools.org/fide/"   # trailing slash matters
+base_url_fide = "https://api.chesstools.org/fide/"
 
 with open(output_file, "w", newline="", encoding="utf-8") as csvfile:
     writer = csv.writer(csvfile)
     writer.writerow(["ECF Code", "FIDE ID", "First Name", "Last Name",
-                     "ECF Rating", "FIDE Rating", "Club"])
+                     "ECF Rating", "FIDE Rating", "Section", "Club"])
 
     for code in ecf_codes:
         # ECF data
@@ -34,7 +33,7 @@ with open(output_file, "w", newline="", encoding="utf-8") as csvfile:
         ).json()
         rating_ecf = rating_ecf_resp.get("revised_rating", "")
 
-        # FIDE rating – key is "rating" now
+        # FIDE rating
         rating_fide = "N/A"
         if fide_id and str(fide_id).strip().isdigit():
             try:
@@ -46,6 +45,8 @@ with open(output_file, "w", newline="", encoding="utf-8") as csvfile:
             except Exception:
                 rating_fide = "Error"
 
-        writer.writerow([code, fide_id, first, last, rating_ecf, rating_fide, club])
+        writer.writerow([
+            code, fide_id, first, last, rating_ecf, rating_fide, "", club, "", "", "", ""
+        ])
 
 print(f"Done → {output_file}")
