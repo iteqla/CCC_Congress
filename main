@@ -3,31 +3,31 @@ import csv
 import re
 from datetime import date
 
-######## CONFIG ########
+#------- CONFIG -------#
 input_file = "entries.csv"
 output_file = f"entries_updated_{date.today().isoformat()}.csv"
 rating_date = date.today().isoformat()
 
-######## API URLs ########
+#------- API URLs -------#
 base_url_ecf = "https://rating.englishchess.org.uk/v2/new/api.php?v2"
 base_url_fide = "https://api.chesstools.org/fide/"
 
-######## Extracts raw ECF code from a cell (HTML-wrapped or plain) ########
+#------- Extracts raw ECF code from a cell (HTML-wrapped or plain) -------#
 def extract_ecf_code(cell):
     if not cell:
         return None
-    ######## Removes HTML if present ########
+    #------- Removes HTML if present -------#
     match = re.search(r'([A-Z0-9]+)', cell.strip(), re.IGNORECASE)
     return match.group(1) if match else None
 
-######## Read input, process, write output ########
+#------- Read input, process, write output -------#
 with open(input_file, "r", newline="", encoding="utf-8") as infile, \
      open(output_file, "w", newline="", encoding="utf-8") as outfile:
 
     reader = csv.reader(infile)
     writer = csv.writer(outfile)
 
-    ######## Write header (copy exactly from input) ########
+    #------- Write header (copy exactly from input) -------#
     header = next(reader)
     writer.writerow(header)
 
@@ -40,11 +40,11 @@ with open(input_file, "r", newline="", encoding="utf-8") as infile, \
         code = extract_ecf_code(raw_ecf_cell)
 
         if not code:
-            # No valid ECF code → leave row untouched
+            #------- No valid ECF code → leave row untouched -------#
             writer.writerow(row)
             continue
 
-        ######## Fetches fresh ECF data ########
+        #------- Fetches fresh ECF data -------#
         info = requests.get(f"{base_url_ecf}/players/code/{code}").json()
         full_name = info.get("full_name", "")
         if "," in full_name:
@@ -63,7 +63,7 @@ with open(input_file, "r", newline="", encoding="utf-8") as infile, \
         ).json()
         rating_ecf = rating_ecf_resp.get("revised_rating", "")
 
-        ######## FIDE rating ########
+        #------- FIDE rating -------#
         rating_fide = "N/A"
         if fide_id and str(fide_id).strip().isdigit():
             try:
@@ -74,13 +74,13 @@ with open(input_file, "r", newline="", encoding="utf-8") as infile, \
             except Exception:
                 rating_fide = "Error"
 
-        ######## Fresh HTML links ########
+        #------- Fresh HTML links -------#
         ecf_link = f'<a href="https://rating.englishchess.org.uk/players?player_no={code}" target="_blank">{code}</a>'
         fide_link = (f'<a href="https://ratings.fide.com/profile/{fide_id}" target="_blank">{fide_id}</a>'
                      if fide_id and str(fide_id).strip().isdigit() else
                      (fide_id if fide_id else ""))
 
-        ######## Builds new row ########
+        #------- Builds new row -------#
         new_row = [
             ecf_link,      # A: ECF Code (always fresh HTML)
             fide_link,     # B: FIDE ID (HTML only if valid)
@@ -91,7 +91,7 @@ with open(input_file, "r", newline="", encoding="utf-8") as infile, \
             club           # G
         ]
 
-        ######## Appends everything from original row starting at index 7 (Section onwards) ########
+        #------- Appends everything from original row starting at index 7 (Section onwards) -------#
         new_row.extend(row[7:])
 
         writer.writerow(new_row)
