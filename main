@@ -1,26 +1,50 @@
 import requests
 import csv
+import re
 from datetime import date
 
-# --- CONFIG ---
+######## CONFIG ########
+input_file = "entries.csv"
+output_file = f"entries_updated_{date.today().isoformat()}.csv"
 rating_date = date.today().isoformat()
-ecf_codes = ["107586L", "311707J", "365840F"] # Put as many as you want
-output_file = f"congress_entries_{rating_date}.csv"
 
-# --- API URLs ---
+######## API URLs ########
 base_url_ecf = "https://rating.englishchess.org.uk/v2/new/api.php?v2"
 base_url_fide = "https://api.chesstools.org/fide/"
 
-with open(output_file, "w", newline="", encoding="utf-8") as csvfile:
-    writer = csv.writer(csvfile)
-    writer.writerow([
-        "ECF Code", "FIDE ID", "First Name", "Last Name",
-        "ECF Rating", "FIDE Rating", "Club", "Section",
-        "Bye", "Paid", "Email", "Phone"
-    ])
+######## Extracts raw ECF code from a cell (HTML-wrapped or plain) ########
+def extract_ecf_code(cell):
+    if not cell:
+        return None
+    ######## Removes HTML if present ########
+    match = re.search(r'([A-Z0-9]+)', cell.strip(), re.IGNORECASE)
+    return match.group(1) if match else None
 
-    for code in ecf_codes:
-        # --- ECF data ---
+######## Read input, process, write output ########
+with open(input_file, "r", newline="", encoding="utf-8") as infile, \
+     open(output_file, "w", newline="", encoding="utf-8") as outfile:
+
+    reader = csv.reader(infile)
+    writer = csv.writer(outfile)
+
+    ######## Write header (copy exactly from input) ########
+    header = next(reader)
+    writer.writerow(header)
+
+    for row in reader:
+        if not row:
+            writer.writerow(row)        # Preserves empty lines
+            continue
+
+        raw_ecf_cell = row[0].strip()
+        code = extract_ecf_code(raw_ecf_cell)
+
+        if not code:
+            # No valid ECF code → leave row untouched
+            writer.writerow(row)
+            continue
+
+        ######## Fetches fresh ECF data ########
         info = requests.get(f"{base_url_ecf}/players/code/{code}").json()
         full_name = info.get("full_name", "")
         if "," in full_name:
@@ -31,6 +55,7 @@ with open(output_file, "w", newline="", encoding="utf-8") as csvfile:
             last = " ".join(parts[1:]) if len(parts) > 1 else ""
 
         club = info.get("club_name", "")
+        ecf_membership = info.get("category", "")
         fide_id = info.get("FIDE_no", "")
 
         rating_ecf_resp = requests.get(
@@ -38,40 +63,37 @@ with open(output_file, "w", newline="", encoding="utf-8") as csvfile:
         ).json()
         rating_ecf = rating_ecf_resp.get("revised_rating", "")
 
-        # --- FIDE rating ---
+        ######## FIDE rating ########
         rating_fide = "N/A"
         if fide_id and str(fide_id).strip().isdigit():
             try:
                 resp = requests.get(f"{base_url_fide}{fide_id}", timeout=10)
                 if resp.status_code == 200:
-                    data = resp.json()
-                    if "rating" in data and data["rating"] is not None:
+                    data = resp.json—if "rating" in data and data["rating"] is not None:
                         rating_fide = str(data["rating"])
             except Exception:
                 rating_fide = "Error"
 
-        # --- HTML wrapping ---
+        ######## Fresh HTML links ########
         ecf_link = f'<a href="https://rating.englishchess.org.uk/players?player_no={code}" target="_blank">{code}</a>'
+        fide_link = (f'<a href="https://ratings.fide.com/profile/{fide_id}" target="_blank">{fide_id}</a>'
+                     if fide_id and str(fide_id).strip().isdigit() else
+                     (fide_id if fide_id else ""))
 
-        if fide_id and str(fide_id).strip().isdigit():
-            fide_link = f'<a href="https://ratings.fide.com/profile/{fide_id}" target="_blank">{fide_id}</a>'
-        else:
-            fide_link = fide_id if fide_id else ""
+        ######## Builds new row ########
+        new_row = [
+            ecf_link,      # A: ECF Code (always fresh HTML)
+            fide_link,     # B: FIDE ID (HTML only if valid)
+            first,         # C
+            last,          # D
+            rating_ecf,    # E
+            rating_fide,   # F
+            club           # G
+        ]
 
-        # --- Write row ---
-        writer.writerow([
-            ecf_link,
-            fide_link,
-            first,
-            last,
-            rating_ecf,
-            rating_fide,
-            club,
-            "",          # Section
-            "",          # Bye
-            "",          # Paid
-            "",          # Email
-            "",          # Phone
-        ])
+        ######## Appends everything from original row starting at index 7 (Section onwards) ########
+        new_row.extend(row[7:])
 
-print(f"Done → {output_file}")
+        writer.writerow(new_row)
+
+print(f"Updated file saved as → {output_file}")
