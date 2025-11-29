@@ -16,7 +16,7 @@ with open(output_file, "w", newline="", encoding="utf-8") as csvfile:
                      "ECF Rating", "FIDE Rating", "Section", "Club"])
 
     for code in ecf_codes:
-        # ECF data
+        # --- ECF data ---
         info = requests.get(f"{base_url_ecf}/players/code/{code}").json()
         full_name = info.get("full_name", "")
         if "," in full_name:
@@ -33,7 +33,7 @@ with open(output_file, "w", newline="", encoding="utf-8") as csvfile:
         ).json()
         rating_ecf = rating_ecf_resp.get("revised_rating", "")
 
-        # FIDE rating
+        # --- FIDE rating ---
         rating_fide = "N/A"
         if fide_id and str(fide_id).strip().isdigit():
             try:
