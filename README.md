@@ -1,1 +1,1 @@
-This script takes as input a list of chess players in CSV format and, from their ECF Code, updates player's name, ECF rating, FIDE ID, FIDE rating and club 
+This script updates a chess players CSV file by enriching each row with fresh, live rating data from the English Chess Federation (ECF) and FIDE, using the player's ECF membership code found in column A.

@@ -16,9 +16,8 @@ base_url_fide = "https://api.chesstools.org/fide/"
 def extract_ecf_code(cell):
     if not cell:
         return None
-    #------- Removes HTML if present -------#
-    match = re.search(r'([A-Z0-9]+)', cell.strip(), re.IGNORECASE)
-    return match.group(1) if match else None
+    match = re.search(r'\b([0-9]{6}[A-Z]|[A-Z]\d{5,6})\b', cell, re.IGNORECASE)
+    return match.group(1).upper() if match else None
 
 #------- Read input, process, write output -------#
 with open(input_file, "r", newline="", encoding="utf-8") as infile, \
@@ -55,7 +54,6 @@ with open(input_file, "r", newline="", encoding="utf-8") as infile, \
             last = " ".join(parts[1:]) if len(parts) > 1 else ""
 
         club = info.get("club_name", "")
-        ecf_membership = info.get("category", "")
         fide_id = info.get("FIDE_no", "")
 
         rating_ecf_resp = requests.get(
@@ -69,7 +67,8 @@ with open(input_file, "r", newline="", encoding="utf-8") as infile, \
             try:
                 resp = requests.get(f"{base_url_fide}{fide_id}", timeout=10)
                 if resp.status_code == 200:
-                    data = resp.json—if "rating" in data and data["rating"] is not None:
+                    data = resp.json()
+                    if "rating" in data and data["rating"] is not None:
                         rating_fide = str(data["rating"])
             except Exception:
                 rating_fide = "Error"
