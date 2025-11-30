@@ -59,7 +59,7 @@ with open(input_file, "r", newline="", encoding="utf-8") as infile, \
         rating_ecf_resp = requests.get(
             f"{base_url_ecf}/ratings/S/{code}/{rating_date}"
         ).json()
-        rating_ecf = rating_ecf_resp.get("revised_rating", "")
+        rating_ecf = rating_ecf_resp.get("original_rating", "")
 
         #------- FIDE rating -------#
         rating_fide = "N/A"
