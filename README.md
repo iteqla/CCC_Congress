@@ -1,1 +1,1 @@
-This script intends gets the chess rating from ECF (and possibly FIDE) APIs, based on player's ECF code. The output is a CSV file.
+This script takes as input a list of chess players in CSV format and, from their ECF Code, updates player's name, ECF rating, FIDE ID, FIDE rating and club 
