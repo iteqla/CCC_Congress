@@ -55,6 +55,8 @@ with open(input_file, "r", newline="", encoding="utf-8") as infile, \
 
         club = info.get("club_name", "")
         fide_id = info.get("FIDE_no", "")
+        ecf_membership = info.get("category", "")
+        ecf_expiry = info.get("due_date", "")
 
         rating_ecf_resp = requests.get(
             f"{base_url_ecf}/ratings/S/{code}/{rating_date}"
@@ -87,12 +89,13 @@ with open(input_file, "r", newline="", encoding="utf-8") as infile, \
             last,          # D
             rating_ecf,    # E
             rating_fide,   # F
-            club           # G
+            ecf_membership, # G
+            ecf_expiry,     # H
+            club           # I
         ]
 
-        #------- Appends everything from original row starting at index 7 (Section onwards) -------#
-        new_row.extend(row[7:])
-
+        #------- Appends everything from original row starting at index 9 (Section onwards) -------#
+        new_row.extend(row[9:])
         writer.writerow(new_row)
 
 print(f"Updated file saved as → {output_file}")
