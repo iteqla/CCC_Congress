@@ -3,7 +3,6 @@ import csv
 import re
 from datetime import date
 
-#------- CONFIG -------#
 input_file = "entries.csv"
 output_file = f"entries_updated_{date.today().isoformat()}.csv"
 rating_date = date.today().isoformat()
@@ -83,15 +82,15 @@ with open(input_file, "r", newline="", encoding="utf-8") as infile, \
 
         #------- Builds new row -------#
         new_row = [
-            ecf_link,      # A: ECF Code (always fresh HTML)
-            fide_link,     # B: FIDE ID (HTML only if valid)
-            first,         # C
-            last,          # D
-            rating_ecf,    # E
-            rating_fide,   # F
+            ecf_link,       # A: ECF Code (always fresh HTML)
+            fide_link,      # B: FIDE ID (HTML only if valid)
+            first,          # C
+            last,           # D
+            rating_ecf,     # E
+            rating_fide,    # F
             ecf_membership, # G
             ecf_expiry,     # H
-            club           # I
+            club            # I
         ]
 
         #------- Appends everything from original row starting at index 9 (Section onwards) -------#
