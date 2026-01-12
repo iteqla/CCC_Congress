@@ -44,7 +44,7 @@ with open(input_file, "r", newline="", encoding="utf-8") as infile, \
 
         #------- Fetches fresh ECF data -------#
         info = requests.get(f"{base_url_ecf}/players/code/{code}").json()
-        full_name = info.get("full_name", "N/A")
+        full_name = info.get("full_name") or "-"
         if "," in full_name:
             last, first = map(str.strip, full_name.split(",", 1))
         else:
@@ -52,10 +52,10 @@ with open(input_file, "r", newline="", encoding="utf-8") as infile, \
             first = parts[0] if parts else ""
             last = " ".join(parts[1:]) if len(parts) > 1 else ""
 
-        club = info.get("club_name", "N/A")
-        fide_id = info.get("FIDE_no") or "N/A"
-        ecf_membership = info.get("category") or "N/A"
-        ecf_expiry = info.get("due_date", "N/A")
+        club = info.get("club_name", "-")
+        fide_id = info.get("FIDE_no") or "-"
+        ecf_membership = info.get("category") or "-"
+        ecf_expiry = info.get("due_date", "-")
 
         rating_ecf_resp = requests.get(
             f"{base_url_ecf}/ratings/S/{code}/{rating_date}"
