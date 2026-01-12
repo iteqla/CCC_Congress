@@ -54,16 +54,16 @@ with open(input_file, "r", newline="", encoding="utf-8") as infile, \
 
         club = info.get("club_name", "N/A")
         fide_id = info.get("FIDE_no") or "N/A"
-        ecf_membership = info.get("category", "N/A")
+        ecf_membership = info.get("category") or "N/A"
         ecf_expiry = info.get("due_date", "N/A")
 
         rating_ecf_resp = requests.get(
             f"{base_url_ecf}/ratings/S/{code}/{rating_date}"
         ).json()
-        rating_ecf = rating_ecf_resp.get("original_rating", "N/A")
+        rating_ecf = rating_ecf_resp.get("original_rating", "-")
 
         #------- FIDE rating -------#
-        rating_fide = "N/A"
+        rating_fide = "-"
         if fide_id and str(fide_id).strip().isdigit():
             try:
                 url = f"{base_url_fide}{fide_id}"
