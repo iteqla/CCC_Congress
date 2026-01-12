@@ -44,7 +44,7 @@ with open(input_file, "r", newline="", encoding="utf-8") as infile, \
 
         #------- Fetches fresh ECF data -------#
         info = requests.get(f"{base_url_ecf}/players/code/{code}").json()
-        full_name = info.get("full_name", "")
+        full_name = info.get("full_name", "N/A")
         if "," in full_name:
             last, first = map(str.strip, full_name.split(",", 1))
         else:
@@ -52,15 +52,15 @@ with open(input_file, "r", newline="", encoding="utf-8") as infile, \
             first = parts[0] if parts else ""
             last = " ".join(parts[1:]) if len(parts) > 1 else ""
 
-        club = info.get("club_name", "")
-        fide_id = info.get("FIDE_no", "")
-        ecf_membership = info.get("category", "")
-        ecf_expiry = info.get("due_date", "")
+        club = info.get("club_name", "N/A")
+        fide_id = info.get("FIDE_no") or "N/A"
+        ecf_membership = info.get("category", "N/A")
+        ecf_expiry = info.get("due_date", "N/A")
 
         rating_ecf_resp = requests.get(
             f"{base_url_ecf}/ratings/S/{code}/{rating_date}"
         ).json()
-        rating_ecf = rating_ecf_resp.get("original_rating", "")
+        rating_ecf = rating_ecf_resp.get("original_rating", "N/A")
 
         #------- FIDE rating -------#
         rating_fide = "N/A"
@@ -97,5 +97,7 @@ with open(input_file, "r", newline="", encoding="utf-8") as infile, \
         #------- Appends everything from original row starting at index 9 (Section onwards) -------#
         new_row.extend(row[9:])
         writer.writerow(new_row)
+        print(f"{reader.line_num - 1:4d} | {code} | {first} | {last}", end=" → ", flush=True)
+        print("OK")
 
 print(f"Updated file saved as → {output_file}")
