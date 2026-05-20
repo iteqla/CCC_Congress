@@ -68,12 +68,14 @@ with open(input_file, "r", newline="", encoding="utf-8") as infile, \
             try:
                 url = f"{base_url_fide}{fide_id}"
                 resp = requests.get(url, timeout=10)
-                if resp.status_code == 200:
-                    data = resp.json()
-                    if data.get("classical_rating"):
-                        rating_fide = str(data["classical_rating"])
-            except Exception:
+                resp.raise_for_status()                    # catches HTTP errors
+                data = resp.json()
+                rating_fide = str(data.get("classical_rating") or "-")
+            except (requests.exceptions.RequestException,
+                    requests.exceptions.JSONDecodeError,
+                    KeyError, ValueError, TypeError) as e:
                 rating_fide = "Error"
+                # print(f"  FIDE error for {fide_id}: {e}")
 
         #------- Fresh HTML links -------#
         ecf_link = f'<a href="https://rating.englishchess.org.uk/players?player_no={code}" target="_blank">{code}</a>'
