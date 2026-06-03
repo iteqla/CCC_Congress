@@ -7,6 +7,10 @@ input_file = "entries.csv"
 output_file = f"entries_updated_{date.today().isoformat()}.csv"
 rating_date = date.today().isoformat()
 
+#------- ANSI Colours -------#
+RED = "\033[91m"
+RESET = "\033[0m"
+
 #------- API URLs -------#
 base_url_ecf = "https://rating.englishchess.org.uk/v2/new/api.php?v2"
 base_url_fide = "https://fide-api.vercel.app/player_info/?fide_id="
@@ -19,6 +23,7 @@ def extract_ecf_code(cell):
     return match.group(1).upper() if match else None
 
 #------- Read input, process, write output -------#
+error_count = 0
 with open(input_file, "r", newline="", encoding="utf-8") as infile, \
      open(output_file, "w", newline="", encoding="utf-8") as outfile:
 
@@ -99,7 +104,16 @@ with open(input_file, "r", newline="", encoding="utf-8") as infile, \
         #------- Appends everything from original row starting at index 9 (Section onwards) -------#
         new_row.extend(row[9:])
         writer.writerow(new_row)
-        print(f"{reader.line_num - 1:4d} | {code} | {first} | {last}", end=" → ", flush=True)
-        print("OK")
 
-print(f"Updated file saved as → {output_file}")
+        # ------- Status-aware progress print -------#
+        if rating_fide == "Error":
+            status = f"{RED}ERROR{RESET}"
+            error_count += 1
+        else:
+            status = "OK"
+        print(f"{reader.line_num - 1:4d} | {code} | {fide_id:9} | {rating_fide:4} | {first} {last} → {status}", flush=True)
+
+if error_count > 0:
+    print(f"Updated file saved as → {output_file}  {RED}with {error_count} error(s){RESET}")
+else:
+    print(f"Updated file saved as → {output_file}")
