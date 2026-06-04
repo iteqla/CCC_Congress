@@ -111,9 +111,9 @@ with open(input_file, "r", newline="", encoding="utf-8") as infile, \
             error_count += 1
         else:
             status = "OK"
-        print(f"{reader.line_num - 1:4d} | {code} | {fide_id:9} | {rating_fide:4} | {first} {last} → {status}", flush=True)
+        print(f"{reader.line_num - 1:4d} | {code} | {fide_id:9} | {rating_fide:4} | {first} {last:20} → {status}", flush=True)
 
 if error_count > 0:
     print(f"Updated file saved as → {output_file}  {RED}with {error_count} error(s){RESET}")
 else:
-    print(f"Updated file saved as → {output_file}")
+    print(f"Updated file saved as → {output_file} with {error_count} error(s)")
